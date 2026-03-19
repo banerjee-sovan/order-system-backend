@@ -28,4 +28,10 @@ public class ProductRequest {
     @NotNull(message = "Stock is required")
     @Min(value = 0, message = "Stock must be zero or greater")
     private Integer stock;
+
+    private String imageUrl;
+
+    private Boolean active;
+
+    private Long categoryId;
 }

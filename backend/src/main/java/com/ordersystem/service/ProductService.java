@@ -2,7 +2,9 @@ package com.ordersystem.service;
 
 import com.ordersystem.dto.ProductRequest;
 import com.ordersystem.dto.ProductResponse;
+import com.ordersystem.entity.Category;
 import com.ordersystem.entity.Product;
+import com.ordersystem.repository.CategoryRepository;
 import com.ordersystem.repository.ProductRepository;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
@@ -25,6 +28,12 @@ public class ProductService {
 
     public List<ProductResponse> listProducts() {
         return productRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public List<ProductResponse> listProductsByCategory(Long categoryId) {
+        return productRepository.findByCategoryId(categoryId).stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -43,6 +52,16 @@ public class ProductService {
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStock(request.getStock());
+        product.setImageUrl(request.getImageUrl());
+        product.setActive(request.getActive() != null ? request.getActive() : Boolean.TRUE);
+
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new NoSuchElementException(
+                            "Category not found with id: " + request.getCategoryId()));
+            product.setCategory(category);
+        }
+
         return product;
     }
 
@@ -52,7 +71,11 @@ public class ProductService {
                 product.getName(),
                 product.getDescription(),
                 product.getPrice(),
-                product.getStock()
+                product.getStock(),
+                product.getImageUrl(),
+                product.getActive(),
+                product.getCategory() != null ? product.getCategory().getId() : null,
+                product.getCategory() != null ? product.getCategory().getName() : null
         );
     }
 }
